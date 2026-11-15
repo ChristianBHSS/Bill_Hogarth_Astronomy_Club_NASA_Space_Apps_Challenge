@@ -1,0 +1,4337 @@
+{
+  "init": [
+    "AD ASTRA, PER ASPERA",
+    "MARS SURFACE MISSION // 30 SOLS",
+    "Four crew. One pre-landed habitat. No resupply.",
+    "!store sol 0",
+    "!store setup_days 0",
+    "!store power 40",
+    "!store oxygen 30",
+    "!store water 0",
+    "!store food 104",
+    "!store waste 0",
+    "!store science 0",
+    "!store mdv_battery 7",
+    "!store mdv_oxygen 28",
+    "!store cargo 0",
+    "!store shelter 0",
+    "!store power_type none",
+    "!store power_online 0",
+    "!store solar_dust 0",
+    "!store life_support 0",
+    "!store water_online 0",
+    "!store extractor 1",
+    "!store scrubber 0",
+    "!store farm 0",
+    "!store rover1 1",
+    "!store rover2 1",
+    "!store rtg_available 1",
+    "!store rtg_active 0",
+    "!store rtg_time 5",
+    "!store mdv_backup 0",
+    "!store base_online 0",
+    "!store eva_person 1",
+    "!store return_sequence setup",
+    "!store next_sequence sol_1",
+    "!store health1 100",
+    "!store health2 100",
+    "!store health3 100",
+    "!store health4 100",
+    "!store rover1_runs 0",
+    "!store rover2_runs 0",
+    "!store setup_complete 0",
+    "The MDV is on the surface. The hard-shell habitat is already assembled.",
+    "The inflatable inner shelter, power plant, and life-support equipment remain packed.",
+    "The MDV battery and oxygen stores can sustain the crew for at most seven sols.",
+    "!jump setup"
+  ],
+  "setup": [
+    "!store return_sequence setup",
+    "?SETUP // 1 Unpack cargo  2 Inflate inner shelter  3 Select power  4 Install life support  5 Wait one sol  6 Status  7 Deploy base  8 Abort > ",
+    "!jump_switch $output",
+    {
+      "1": "setup_unpack",
+      "2": "setup_inflate",
+      "3": "choose_power",
+      "4": "setup_life_support",
+      "5": "setup_wait",
+      "6": "status",
+      "7": "setup_deploy",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "setup_unpack": [
+    "You unpack the cargo containers. The equipment is now accessible.",
+    "!store cargo 1",
+    "!jump setup"
+  ],
+  "setup_inflate": [
+    "!if 1 == $cargo",
+    [
+      "The crew inflates and seals the soft inner shelter inside the printed hard-shell structure.",
+      "!store shelter 1",
+      "!jump setup"
+    ],
+    [
+      "Cargo must be unpacked before the inner shelter can be assembled.",
+      "!jump setup"
+    ]
+  ],
+  "choose_power": [
+    "?POWER PLANT // 1 Remote nuclear reactor (high output, difficult repairs)  2 Solar array (nearby, dust vulnerable) > ",
+    "!jump_switch $output",
+    {
+      "1": "choose_nuclear",
+      "2": "choose_solar",
+      "\n": "invalid_choice"
+    }
+  ],
+  "choose_nuclear": [
+    "The nuclear reactor is deployed at a remote site. It produces more power but is difficult to reach for repairs.",
+    "!store power_type nuclear",
+    "!store power_online 1",
+    "!store solar_dust 0",
+    "!jump setup"
+  ],
+  "choose_solar": [
+    "The solar array is deployed beside the habitat. It is easier to maintain, but Martian dust frequently blocks it.",
+    "!store power_type solar",
+    "!store power_online 1",
+    "!store solar_dust 0",
+    "!jump setup"
+  ],
+  "setup_life_support": [
+    "!if 1 == $cargo",
+    [
+      "!if 1 == $shelter",
+      [
+        "!if 1 == $power_online",
+        [
+          "The crew installs atmospheric oxygen extraction, CO2 scrubbing, water extraction and recycling, and the crop unit.",
+          "Subsurface ice is extracted for the initial water reserve. This is power-intensive.",
+          "!modify power - 10",
+          "!modify water + 150",
+          "!store life_support 1",
+          "!store water_online 1",
+          "!store extractor 1",
+          "!store scrubber 0",
+          "!store farm 1",
+          "!jump setup"
+        ],
+        [
+          "A power source must be selected before life support can be installed.",
+          "!jump setup"
+        ]
+      ],
+      [
+        "Inflate the inner shelter before installing life support.",
+        "!jump setup"
+      ]
+    ],
+    [
+      "Unpack the cargo before installing life support.",
+      "!jump setup"
+    ]
+  ],
+  "setup_wait": [
+    "One sol passes while the crew works inside the MDV.",
+    "!modify setup_days + 1",
+    "!modify mdv_battery - 1",
+    "!modify mdv_oxygen - 4",
+    "!if $mdv_battery <= 0",
+    [
+      "The MDV battery is exhausted before the habitat is ready.",
+      "!jump mission_failure"
+    ],
+    [
+      "!if $mdv_oxygen <= 0",
+      [
+        "The MDV oxygen reserve is exhausted before the habitat is ready.",
+        "!jump mission_failure"
+      ],
+      [
+        "The MDV remains operational, but its reserves are shrinking.",
+        "!jump setup"
+      ]
+    ]
+  ],
+  "setup_deploy": [
+    "!if 1 == $cargo",
+    [
+      "!if 1 == $shelter",
+      [
+        "!if 1 == $power_online",
+        [
+          "!if 1 == $life_support",
+          [
+            "The habitat is commissioned. The crew transfers from the MDV into the base.",
+            "!store setup_complete 1",
+            "!store base_online 1",
+            "!store sol 0",
+            "!jump sol_1"
+          ],
+          [
+            "Life-support equipment is not installed.",
+            "!jump setup"
+          ]
+        ],
+        [
+          "A power plant has not been selected.",
+          "!jump setup"
+        ]
+      ],
+      [
+        "The inflatable inner shelter is not assembled.",
+        "!jump setup"
+      ]
+    ],
+    [
+      "Cargo has not been unpacked.",
+      "!jump setup"
+    ]
+  ],
+  "status": [
+  "MISSION STATUS //",
+  "Sol: ",
+  "$sol",
+  "Power reserve: ",
+  "$power",
+  "Oxygen: ",
+  "$oxygen",
+  "Water: ",
+  "$water",
+  "Food: ",
+  "$food",
+  "Waste: ",
+  "$waste",
+  "Science: ",
+  "$science",
+  "Crew health //",
+  "1: ",
+  "$health1",
+  "2: ",
+  "$health2",
+  "3: ",
+  "$health3",
+  "4: ",
+  "$health4",
+  "Systems //",
+  "Power type: ",
+  "$power_type",
+  "Power online: ",
+  "$power_online",
+  "Solar dust: ",
+  "$solar_dust",
+  "Water online: ",
+  "$water_online",
+  "Rovers //",
+  "Rover 1: ",
+  "$rover1",
+  "Rover 2: ",
+  "$rover2",
+  "RTG active: ",
+  "$rtg_active",
+  "RTG sols remaining: ",
+  "$rtg_time",
+  "!jump $return_sequence"
+],
+  "invalid_choice": [
+    "Invalid selection. Choose one of the listed options.",
+    "!jump $return_sequence"
+  ],
+  "sol_1": [
+    "!store return_sequence sol_1",
+    "?SOL 1 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_1",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_2": [
+    "!store return_sequence sol_2",
+    "?SOL 2 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_2",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_3": [
+    "!store return_sequence sol_3",
+    "?SOL 3 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_3",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_4": [
+    "!store return_sequence sol_4",
+    "?SOL 4 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_4",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_5": [
+    "!store return_sequence sol_5",
+    "?SOL 5 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_5",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_6": [
+    "!store return_sequence sol_6",
+    "?SOL 6 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_6",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_7": [
+    "!store return_sequence sol_7",
+    "?SOL 7 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_7",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_8": [
+    "!store return_sequence sol_8",
+    "?SOL 8 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_8",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_9": [
+    "!store return_sequence sol_9",
+    "?SOL 9 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_9",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_10": [
+    "!store return_sequence sol_10",
+    "?SOL 10 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_10",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_11": [
+    "!store return_sequence sol_11",
+    "?SOL 11 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_11",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_12": [
+    "!store return_sequence sol_12",
+    "?SOL 12 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_12",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_13": [
+    "!store return_sequence sol_13",
+    "?SOL 13 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_13",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_14": [
+    "!store return_sequence sol_14",
+    "?SOL 14 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_14",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_15": [
+    "!store return_sequence sol_15",
+    "?SOL 15 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_15",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_16": [
+    "!store return_sequence sol_16",
+    "?SOL 16 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_16",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_17": [
+    "!store return_sequence sol_17",
+    "?SOL 17 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_17",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_18": [
+    "!store return_sequence sol_18",
+    "?SOL 18 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_18",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_19": [
+    "!store return_sequence sol_19",
+    "?SOL 19 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_19",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_20": [
+    "!store return_sequence sol_20",
+    "?SOL 20 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_20",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_21": [
+    "!store return_sequence sol_21",
+    "?SOL 21 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_21",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_22": [
+    "!store return_sequence sol_22",
+    "?SOL 22 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_22",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_23": [
+    "!store return_sequence sol_23",
+    "?SOL 23 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_23",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_24": [
+    "!store return_sequence sol_24",
+    "?SOL 24 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_24",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_25": [
+    "!store return_sequence sol_25",
+    "?SOL 25 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_25",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_26": [
+    "!store return_sequence sol_26",
+    "?SOL 26 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_26",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_27": [
+    "!store return_sequence sol_27",
+    "?SOL 27 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_27",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_28": [
+    "!store return_sequence sol_28",
+    "?SOL 28 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_28",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_29": [
+    "!store return_sequence sol_29",
+    "?SOL 29 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_29",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "sol_30": [
+    "!store return_sequence sol_30",
+    "?SOL 30 // 1 Status  2 Rover 1 expedition  3 Rover 2 expedition  4 EVA  5 Maintenance  6 Life-support mode  7 Advance one sol  8 Abort to MAV > ",
+    "!jump_switch $output",
+    {
+      "1": "status",
+      "2": "rover1_expedition",
+      "3": "rover2_expedition",
+      "4": "eva_start",
+      "5": "maintenance",
+      "6": "life_support_mode",
+      "7": "advance_30",
+      "8": "abort",
+      "\n": "invalid_choice"
+    }
+  ],
+  "life_support_mode": [
+    "?LIFE SUPPORT // 1 Atmospheric oxygen extraction (more power, replenishes oxygen)  2 CO2 scrubber (less power, oxygen reserves decline) > ",
+    "!jump_switch $output",
+    {
+      "1": "mode_extractor",
+      "2": "mode_scrubber",
+      "\n": "invalid_choice"
+    }
+  ],
+  "mode_extractor": [
+    "Atmospheric extraction is enabled. Oxygen production improves, but electrical demand rises.",
+    "!store extractor 1",
+    "!store scrubber 0",
+    "!jump $return_sequence"
+  ],
+  "mode_scrubber": [
+    "The CO2 scrubber is enabled. It uses less power, but does not replace oxygen consumed by the crew.",
+    "!store extractor 0",
+    "!store scrubber 1",
+    "!jump $return_sequence"
+  ],
+  "rover1_expedition": [
+    "ROVER 1 // A manned expedition consumes power and oxygen. A rollover or breakdown strands the rover permanently.",
+    "!if 1 == $rover1",
+    [
+      "!if $power >= 6",
+      [
+        "!if $oxygen >= 2",
+        [
+          "!modify power - 6",
+          "!modify oxygen - 2",
+          "!modify rover1_runs + 1",
+          "!random_hop rover1_failure rover1_success_1 rover1_success_2 rover1_success_3 rover1_success_4 rover1_success_5"
+        ],
+        [
+          "Insufficient oxygen for a manned rover expedition.",
+          "!jump $return_sequence"
+        ]
+      ],
+      [
+        "Insufficient power for a rover expedition.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "Rover 1 is no longer operational and cannot be repaired.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "rover1_failure": [
+    "ROVER 1 INCIDENT // The rover rolls over or suffers an irreparable breakdown.",
+    "!store rover1 0",
+    "!modify health1 - 20",
+    "!jump crew_check"
+  ],
+  "rover1_success_1": [
+    "ROVER 1 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover1_success_2": [
+    "ROVER 1 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover1_success_3": [
+    "ROVER 1 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover1_success_4": [
+    "ROVER 1 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover1_success_5": [
+    "ROVER 1 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover2_expedition": [
+    "ROVER 2 // A manned expedition consumes power and oxygen. A rollover or breakdown strands the rover permanently.",
+    "!if 1 == $rover2",
+    [
+      "!if $power >= 6",
+      [
+        "!if $oxygen >= 2",
+        [
+          "!modify power - 6",
+          "!modify oxygen - 2",
+          "!modify rover2_runs + 1",
+          "!random_hop rover2_failure rover2_success_1 rover2_success_2 rover2_success_3 rover2_success_4 rover2_success_5"
+        ],
+        [
+          "Insufficient oxygen for a manned rover expedition.",
+          "!jump $return_sequence"
+        ]
+      ],
+      [
+        "Insufficient power for a rover expedition.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "Rover 2 is no longer operational and cannot be repaired.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "rover2_failure": [
+    "ROVER 2 INCIDENT // The rover rolls over or suffers an irreparable breakdown.",
+    "!store rover2 0",
+    "!modify health2 - 20",
+    "!jump crew_check"
+  ],
+  "rover2_success_1": [
+    "ROVER 2 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover2_success_2": [
+    "ROVER 2 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover2_success_3": [
+    "ROVER 2 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover2_success_4": [
+    "ROVER 2 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "rover2_success_5": [
+    "ROVER 2 // The expedition returns with valuable geological samples.",
+    "!modify science + 8",
+    "!jump $return_sequence"
+  ],
+  "eva_start": [
+    "EVA // Select an astronaut. Every EVA consumes resources and carries an injury risk.",
+    "?Astronaut number (1-4)> ",
+    "!jump_switch $output",
+    {
+      "1": "eva_person_1",
+      "2": "eva_person_2",
+      "3": "eva_person_3",
+      "4": "eva_person_4",
+      "\n": "invalid_choice"
+    }
+  ],
+  "eva_person_1": [
+    "!store eva_person 1",
+    "?EVA TASK // 1 Surface rock collection (+3 science)  2 Drill core (+6 science, more water and power)  3 Atmospheric sample (+4 science) > ",
+    "!jump_switch $output",
+    {
+      "1": "eva_rocks",
+      "2": "eva_drill",
+      "3": "eva_atmosphere",
+      "\n": "invalid_choice"
+    }
+  ],
+  "eva_person_2": [
+    "!store eva_person 2",
+    "?EVA TASK // 1 Surface rock collection (+3 science)  2 Drill core (+6 science, more water and power)  3 Atmospheric sample (+4 science) > ",
+    "!jump_switch $output",
+    {
+      "1": "eva_rocks",
+      "2": "eva_drill",
+      "3": "eva_atmosphere",
+      "\n": "invalid_choice"
+    }
+  ],
+  "eva_person_3": [
+    "!store eva_person 3",
+    "?EVA TASK // 1 Surface rock collection (+3 science)  2 Drill core (+6 science, more water and power)  3 Atmospheric sample (+4 science) > ",
+    "!jump_switch $output",
+    {
+      "1": "eva_rocks",
+      "2": "eva_drill",
+      "3": "eva_atmosphere",
+      "\n": "invalid_choice"
+    }
+  ],
+  "eva_person_4": [
+    "!store eva_person 4",
+    "?EVA TASK // 1 Surface rock collection (+3 science)  2 Drill core (+6 science, more water and power)  3 Atmospheric sample (+4 science) > ",
+    "!jump_switch $output",
+    {
+      "1": "eva_rocks",
+      "2": "eva_drill",
+      "3": "eva_atmosphere",
+      "\n": "invalid_choice"
+    }
+  ],
+  "eva_rocks": [
+    "!if $power >= 2",
+    [
+      "!if $oxygen >= 2",
+      [
+        "!modify power - 2",
+        "!modify oxygen - 2",
+        "!modify science + 3",
+        "!random_hop eva_injury eva_safe_1 eva_safe_2 eva_safe_3 eva_safe_4"
+      ],
+      [
+        "Insufficient oxygen for EVA.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "Insufficient power for EVA.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "eva_drill": [
+    "!if $power >= 4",
+    [
+      "!if $oxygen >= 2",
+      [
+        "!if $water >= 3",
+        [
+          "!modify power - 4",
+          "!modify oxygen - 2",
+          "!modify water - 3",
+          "!modify science + 6",
+          "!random_hop eva_injury eva_safe_1 eva_safe_2 eva_safe_3 eva_safe_4"
+        ],
+        [
+          "Insufficient water for drilling operations.",
+          "!jump $return_sequence"
+        ]
+      ],
+      [
+        "Insufficient oxygen for EVA.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "Insufficient power for EVA.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "eva_atmosphere": [
+    "!if $power >= 2",
+    [
+      "!if $oxygen >= 2",
+      [
+        "!modify power - 2",
+        "!modify oxygen - 2",
+        "!modify science + 4",
+        "!random_hop eva_injury eva_safe_1 eva_safe_2 eva_safe_3 eva_safe_4"
+      ],
+      [
+        "Insufficient oxygen for EVA.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "Insufficient power for EVA.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "eva_injury": [
+    "EVA INCIDENT // An astronaut is injured during the operation.",
+    "!if $eva_person == 1",
+    [
+      "!modify health1 - 15",
+      "!jump crew_check"
+    ],
+    [
+      "!if $eva_person == 2",
+      [
+        "!modify health2 - 15",
+        "!jump crew_check"
+      ],
+      [
+        "!if $eva_person == 3",
+        [
+          "!modify health3 - 15",
+          "!jump crew_check"
+        ],
+        [
+          "!modify health4 - 15",
+          "!jump crew_check"
+        ]
+      ]
+    ]
+  ],
+  "eva_safe_1": [
+    "The EVA is completed without injury.",
+    "!jump $return_sequence"
+  ],
+  "eva_safe_2": [
+    "The EVA is completed without injury.",
+    "!jump $return_sequence"
+  ],
+  "eva_safe_3": [
+    "The EVA is completed without injury.",
+    "!jump $return_sequence"
+  ],
+  "eva_safe_4": [
+    "The EVA is completed without injury.",
+    "!jump $return_sequence"
+  ],
+  "crew_check": [
+    "!if $health1 <= 0",
+    [
+      "Astronaut 1 has died. The mission is lost.",
+      "!jump mission_failure"
+    ],
+    [
+      "!if $health2 <= 0",
+      [
+        "Astronaut 2 has died. The mission is lost.",
+        "!jump mission_failure"
+      ],
+      [
+        "!if $health3 <= 0",
+        [
+          "Astronaut 3 has died. The mission is lost.",
+          "!jump mission_failure"
+        ],
+        [
+          "!if $health4 <= 0",
+          [
+            "Astronaut 4 has died. The mission is lost.",
+            "!jump mission_failure"
+          ],
+          [
+            "!jump $return_sequence"
+          ]
+        ]
+      ]
+    ]
+  ],
+  "maintenance": [
+    "?MAINTENANCE // 1 Clean dusty solar array  2 Repair remote nuclear reactor  3 Repair water system  4 Activate RTG  5 Reconfigure MDV as backup shelter  6 Return > ",
+    "!jump_switch $output",
+    {
+      "1": "clean_solar",
+      "2": "repair_nuclear",
+      "3": "repair_water",
+      "4": "activate_rtg",
+      "5": "mdv_reconfigure",
+      "6": "maintenance_return",
+      "\n": "invalid_choice"
+    }
+  ],
+  "maintenance_return": [
+    "!jump $return_sequence"
+  ],
+  "clean_solar": [
+    "!if solar == $power_type",
+    [
+      "!if 1 == $solar_dust",
+      [
+        "!if $power >= 4",
+        [
+          "The crew performs an EVA to brush dust from the nearby solar array.",
+          "!modify power - 4",
+          "!modify health3 - 5",
+          "!store solar_dust 0",
+          "!jump crew_check"
+        ],
+        [
+          "Insufficient power to service the array.",
+          "!jump $return_sequence"
+        ]
+      ],
+      [
+        "The solar array is not currently dust-covered.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "The installed power source is not solar.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "repair_nuclear": [
+    "!if nuclear == $power_type",
+    [
+      "!if 0 == $power_online",
+      [
+        "!if $power >= 10",
+        [
+          "The crew travels to the remote reactor and performs a difficult repair.",
+          "!modify power - 10",
+          "!modify health4 - 10",
+          "!store power_online 1",
+          "!jump crew_check"
+        ],
+        [
+          "Insufficient power reserve for the repair expedition.",
+          "!jump $return_sequence"
+        ]
+      ],
+      [
+        "The nuclear reactor is already online.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "The installed power source is not nuclear.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "repair_water": [
+    "!if 0 == $water_online",
+    [
+      "!if $power >= 5",
+      [
+        "The crew repairs a leak or frozen section of the water system.",
+        "!modify power - 5",
+        "!modify health2 - 5",
+        "!store water_online 1",
+        "!jump $return_sequence"
+      ],
+      [
+        "Insufficient power to repair the water system.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "The water system is already operational.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "activate_rtg": [
+    "!if 1 == $rtg_available",
+    [
+      "!if $rtg_time > 0",
+      [
+        "The RTG is activated. It can sustain only basic life support for five sols.",
+        "!store rtg_active 1",
+        "!store power_online 0",
+        "!store farm 0",
+        "!store extractor 0",
+        "!store scrubber 1",
+        "!jump $return_sequence"
+      ],
+      [
+        "The RTG reserve is exhausted.",
+        "!jump $return_sequence"
+      ]
+    ],
+    [
+      "The RTG is unavailable.",
+      "!jump $return_sequence"
+    ]
+  ],
+  "mdv_reconfigure": [
+    "The MDV is reconfigured as an emergency shelter. Its own battery and oxygen stores will last no more than seven sols.",
+    "!store mdv_backup 1",
+    "!store base_online 0",
+    "!store power_online 0",
+    "!jump $return_sequence"
+  ],
+  "advance_1": [
+    "!store next_sequence sol_2",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_2": [
+    "!store next_sequence sol_3",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_3": [
+    "!store next_sequence sol_4",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_4": [
+    "!store next_sequence sol_5",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_5": [
+    "!store next_sequence sol_6",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_6": [
+    "!store next_sequence sol_7",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_7": [
+    "!store next_sequence sol_8",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_8": [
+    "!store next_sequence sol_9",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_9": [
+    "!store next_sequence sol_10",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_10": [
+    "!store next_sequence sol_11",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_11": [
+    "!store next_sequence sol_12",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_12": [
+    "!store next_sequence sol_13",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_13": [
+    "!store next_sequence sol_14",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_14": [
+    "!store next_sequence sol_15",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_15": [
+    "!store next_sequence sol_16",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_16": [
+    "!store next_sequence sol_17",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_17": [
+    "!store next_sequence sol_18",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_18": [
+    "!store next_sequence sol_19",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_19": [
+    "!store next_sequence sol_20",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_20": [
+    "!store next_sequence sol_21",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_21": [
+    "!store next_sequence sol_22",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_22": [
+    "!store next_sequence sol_23",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_23": [
+    "!store next_sequence sol_24",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_24": [
+    "!store next_sequence sol_25",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_25": [
+    "!store next_sequence sol_26",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_26": [
+    "!store next_sequence sol_27",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_27": [
+    "!store next_sequence sol_28",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_28": [
+    "!store next_sequence sol_29",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_29": [
+    "!store next_sequence sol_30",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "advance_30": [
+    "!store next_sequence final_review",
+    "The crew begins the next sol. Daily consumption and production are applied.",
+    "!modify sol + 1",
+    "!modify food - 4",
+    "!modify waste + 3",
+    "!modify oxygen - 4",
+    "!modify water - 8",
+    "!if 1 == $farm",
+    [
+      "!modify food + 1",
+      "!modify water - 2"
+    ],
+    [
+      "# Crop unit is offline."
+    ],
+    "!if 1 == $water_online",
+    [
+      "!modify water + 6"
+    ],
+    [
+      "# Water recycling is offline."
+    ],
+    "!if 1 == $extractor",
+    [
+      "!modify oxygen + 5"
+    ],
+    [
+      "!modify oxygen + 2"
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "!modify mdv_battery - 1",
+      "!modify mdv_oxygen - 4"
+    ],
+    [
+      "# MDV remains stowed."
+    ],
+    "!if 1 == $mdv_backup",
+    [
+      "# MDV backup battery supplies the emergency shelter."
+    ],
+    [
+      "!if 1 == $power_online",
+      [
+        "!if nuclear == $power_type",
+        [
+          "!modify power + 27"
+        ],
+        [
+          "!if 0 == $solar_dust",
+          [
+            "!modify power + 25"
+          ],
+          [
+            "# Dust-covered panels generate no power."
+          ]
+        ],
+        "!modify power - 20",
+        "!if 1 == $farm",
+        [
+          "!modify power - 2"
+        ],
+        [
+          "# Farm is offline."
+        ],
+        "!if 1 == $water_online",
+        [
+          "!modify power - 1"
+        ],
+        [
+          "# Water recycling is offline."
+        ],
+        "!if 1 == $extractor",
+        [
+          "!modify power - 3"
+        ],
+        [
+          "!modify power - 1"
+        ]
+      ],
+      [
+        "!if 1 == $rtg_active",
+        [
+          "!modify power + 8",
+          "!modify power - 8",
+          "!modify rtg_time - 1"
+        ],
+        [
+          "!modify power - 20"
+        ]
+      ]
+    ],
+    "!jump daily_random_events"
+  ],
+  "daily_random_events": [
+    "!if nuclear == $power_type",
+    [
+      "!if 1 == $power_online",
+      [
+        "!random_hop nuclear_failure nuclear_ok_1 nuclear_ok_2 nuclear_ok_3 nuclear_ok_4 nuclear_ok_5 nuclear_ok_6 nuclear_ok_7 nuclear_ok_8 nuclear_ok_9"
+      ],
+      [
+        "!jump water_random"
+      ]
+    ],
+    [
+      "!if solar == $power_type",
+      [
+        "!if 0 == $solar_dust",
+        [
+          "!random_hop solar_dust_event solar_clear_1 solar_clear_2"
+        ],
+        [
+          "!jump water_random"
+        ]
+      ],
+      [
+        "!jump water_random"
+      ]
+    ]
+  ],
+  "nuclear_failure": [
+    "POWER EMERGENCY // The remote nuclear reactor has failed. It must be repaired at the remote site.",
+    "!store power_online 0",
+    "!jump water_random"
+  ],
+  "nuclear_ok_1": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_2": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_3": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_4": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_5": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_6": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_7": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_8": [
+    "!jump water_random"
+  ],
+  "nuclear_ok_9": [
+    "!jump water_random"
+  ],
+  "solar_dust_event": [
+    "POWER WARNING // Martian dust has covered the solar array. It must be cleaned during an EVA.",
+    "!store solar_dust 1",
+    "!jump water_random"
+  ],
+  "solar_clear_1": [
+    "!jump water_random"
+  ],
+  "solar_clear_2": [
+    "!jump water_random"
+  ],
+  "water_random": [
+    "!if 1 == $water_online",
+    [
+      "!random_hop water_leak_event water_ok_1 water_ok_2 water_ok_3 water_ok_4 water_ok_5 water_ok_6 water_ok_7 water_ok_8 water_ok_9 water_ok_10 water_ok_11 water_ok_12 water_ok_13 water_ok_14 water_ok_15 water_ok_16 water_ok_17 water_ok_18 water_ok_19"
+    ],
+    [
+      "!jump daily_checks"
+    ]
+  ],
+  "water_leak_event": [
+    "WATER EMERGENCY // A leak or frozen pipe has disabled the water system.",
+    "!store water_online 0",
+    "!jump daily_checks"
+  ],
+  "water_ok_1": [
+    "!jump daily_checks"
+  ],
+  "water_ok_2": [
+    "!jump daily_checks"
+  ],
+  "water_ok_3": [
+    "!jump daily_checks"
+  ],
+  "water_ok_4": [
+    "!jump daily_checks"
+  ],
+  "water_ok_5": [
+    "!jump daily_checks"
+  ],
+  "water_ok_6": [
+    "!jump daily_checks"
+  ],
+  "water_ok_7": [
+    "!jump daily_checks"
+  ],
+  "water_ok_8": [
+    "!jump daily_checks"
+  ],
+  "water_ok_9": [
+    "!jump daily_checks"
+  ],
+  "water_ok_10": [
+    "!jump daily_checks"
+  ],
+  "water_ok_11": [
+    "!jump daily_checks"
+  ],
+  "water_ok_12": [
+    "!jump daily_checks"
+  ],
+  "water_ok_13": [
+    "!jump daily_checks"
+  ],
+  "water_ok_14": [
+    "!jump daily_checks"
+  ],
+  "water_ok_15": [
+    "!jump daily_checks"
+  ],
+  "water_ok_16": [
+    "!jump daily_checks"
+  ],
+  "water_ok_17": [
+    "!jump daily_checks"
+  ],
+  "water_ok_18": [
+    "!jump daily_checks"
+  ],
+  "water_ok_19": [
+    "!jump daily_checks"
+  ],
+  "daily_checks": [
+    "!if 1 == $mdv_backup",
+    [
+      "!if $mdv_battery <= 0",
+      [
+        "The MDV backup battery is exhausted.",
+        "!jump mission_failure"
+      ],
+      [
+        "!if $mdv_oxygen <= 0",
+        [
+          "The MDV backup oxygen is exhausted.",
+          "!jump mission_failure"
+        ],
+        [
+          "!jump daily_resource_checks"
+        ]
+      ]
+    ],
+    [
+      "!jump daily_resource_checks"
+    ]
+  ],
+  "daily_resource_checks": [
+    "!if $oxygen <= 0",
+    [
+      "!modify health1 - 10",
+      "!modify health2 - 10",
+      "!modify health3 - 10",
+      "!modify health4 - 10"
+    ],
+    [
+      "# Oxygen reserves remain positive."
+    ],
+    "!if $water <= 0",
+    [
+      "!modify health1 - 10",
+      "!modify health2 - 10",
+      "!modify health3 - 10",
+      "!modify health4 - 10"
+    ],
+    [
+      "# Water reserves remain positive."
+    ],
+    "!if $food <= 0",
+    [
+      "!modify health1 - 10",
+      "!modify health2 - 10",
+      "!modify health3 - 10",
+      "!modify health4 - 10"
+    ],
+    [
+      "# Food reserves remain positive."
+    ],
+    "!if $waste >= 100",
+    [
+      "The sealed waste container is full. The mission must end.",
+      "!jump mission_failure"
+    ],
+    [
+      "# Waste container capacity remains."
+    ],
+    "!if 1 == $rtg_active",
+    [
+      "!if $rtg_time <= 0",
+      [
+        "The RTG has exhausted its five-sol emergency reserve.",
+        "!jump mission_failure"
+      ],
+      [
+        "# RTG reserve remains."
+      ]
+    ],
+    [
+      "# RTG is not active."
+    ],
+    "!if $power <= 0",
+    [
+      "!if $rtg_active == 0",
+      [
+        "Electrical reserves are exhausted and the RTG is not active.",
+        "!jump mission_failure"
+      ],
+      [
+        "# RTG is supplying basic life support."
+      ]
+    ],
+    [
+      "# Electrical reserve remains."
+    ],
+    "!store return_sequence daily_end",
+    "!jump crew_check"
+  ],
+  "daily_end": [
+    "!if $sol >= 30",
+    [
+      "!jump final_review"
+    ],
+    [
+      "!jump $next_sequence"
+    ]
+  ],
+  "final_review": [
+    "MISSION COMPLETE // Thirty sols have elapsed. The crew prepares to board the Mars Ascent Vehicle.",
+    "Final science score: $science",
+    "Remaining food: $food",
+    "Waste container usage: $waste / 100",
+    "!if $science >= 45",
+    [
+      "!if $food >= 14",
+      [
+        "!if $health1 > 0",
+        [
+          "!if $health2 > 0",
+          [
+            "!if $health3 > 0",
+            [
+              "!if $health4 > 0",
+              [
+                "MISSION SUCCESS // The crew returns aboard the MAV with the required science return and a two-week food reserve.",
+                "!jump mission_success"
+              ],
+              [
+                "!jump mission_failure"
+              ]
+            ],
+            [
+              "!jump mission_failure"
+            ]
+          ],
+          [
+            "!jump mission_failure"
+          ]
+        ],
+        [
+          "!jump mission_failure"
+        ]
+      ],
+      [
+        "!jump mission_failure"
+      ]
+    ],
+    [
+      "MISSION FAILURE // The scientific return or final food reserve is below mission requirements.",
+      "!jump mission_failure"
+    ]
+  ],
+  "mission_success": [
+    "AD ASTRA, PER ASPERA.",
+    "All four astronauts survived. The MAV launches from Mars.",
+    "!end"
+  ],
+  "mission_failure": [
+    "MISSION FAILURE // The mission can no longer meet its survival or operational requirements.",
+    "If the MAV remains available, the crew's emergency ascent is initiated where possible.",
+    "Scientific score at termination: $science",
+    "!end"
+  ],
+  "abort": [
+    "MISSION ABORT // The crew abandons surface operations and prepares to ascend aboard the MAV.",
+    "The MAV carries independent power and oxygen.",
+    "Scientific score at abort: $science",
+    "!end"
+  ]
+}
